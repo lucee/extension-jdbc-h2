@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.lucee</groupId>
     <artifactId>h2-jdbc-extension</artifactId>
-    <version>2.1.214.0002L</version>
+    <version>2.1.214.0001L</version>
     <packaging>pom</packaging>
     <name>H2 JDBC</name>
 
