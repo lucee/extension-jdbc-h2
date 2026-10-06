@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Re-publication of the existing H2 JDBC extension 1.3.172 to Maven Central.
+
+  Nothing is built here. The .lex is the exact file already served from
+  https://cdn.lucee.org/org/lucee/h2-jdbc-extension/1.3.172/h2-jdbc-extension-1.3.172.lex
+  (built 2015-02-26). The workflow .github/workflows/publish-legacy-1.3.172.yml downloads it,
+  verifies size and SHA-256, and this POM only attaches, signs and publishes it.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.lucee</groupId>
+    <artifactId>h2-jdbc-extension</artifactId>
+    <version>1.3.172</version>
+    <packaging>pom</packaging>
+    <name>H2 JDBC</name>
+    <description>H2 is a relational database management system written in Java.</description>
+    <url>https://github.com/lucee/extension-jdbc-h2</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- values taken from META-INF/MANIFEST.MF of the published 1.3.172 .lex -->
+        <id>465E1E35-2425-4F4E-8B3FAB638BD7280A</id>
+        <label>H2</label>
+        <buildDate>2015-02-26 12:25:00</buildDate>
+        <luceeCoreVersion>5.0.0.019</luceeCoreVersion>
+        <jdbcid>h2</jdbcid>
+        <image>https://raw.githubusercontent.com/lucee/extension-jdbc-h2/master/logo.png</image>
+        <lex.file>${project.basedir}/h2-jdbc-extension-1.3.172.lex</lex.file>
+    </properties>
+
+    <licenses>
+        <license>
+            <name>The GNU Lesser General Public License, Version 2.1</name>
+            <url>http://www.gnu.org/licenses/lgpl-2.1.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>micstriit</id>
+            <name>Michael Offner</name>
+            <email>michael@lucee.org</email>
+            <organization>Lucee Association Switzerland</organization>
+            <organizationUrl>http://lucee.org</organizationUrl>
+            <roles>
+                <role>Project-Administrator</role>
+                <role>Developer</role>
+            </roles>
+            <timezone>+1</timezone>
+        </developer>
+    </developers>
+
+    <scm>
+        <url>https://github.com/lucee/extension-jdbc-h2</url>
+        <connection>scm:git:git://github.com/lucee/extension-jdbc-h2.git</connection>
+        <developerConnection>scm:git:git@github.com:lucee/extension-jdbc-h2.git</developerConnection>
+    </scm>
+
+    <profiles>
+        <profile>
+            <id>release-sign-artifacts</id>
+            <activation>
+                <property>
+                    <name>performRelease</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <!-- signs the POM and the attached .lex (same plugin/version as the main build) -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.0.1</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <build>
+        <plugins>
+            <!-- attach the pre-built .lex unchanged -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-artifacts</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>attach-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <artifacts>
+                                <artifact>
+                                    <file>${lex.file}</file>
+                                    <type>lex</type>
+                                </artifact>
+                            </artifacts>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- same publishing setup as the main build (server id "ossrh" from maven-settings.xml) -->
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.8.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>ossrh</publishingServerId>
+                    <autoPublish>true</autoPublish>
+                    <waitUntil>validated</waitUntil>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
