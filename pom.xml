@@ -1,10 +1,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://www.w3.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.lucee</groupId>
     <artifactId>h2-jdbc-extension</artifactId>
-    <version>2.1.214.0001L</version>
+    <version>2.1.214.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>H2 JDBC</name>
 
@@ -14,16 +14,30 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <id>465E1E35-2425-4F4E-8B3FAB638BD7280A</id>
-        <image>https://raw.githubusercontent.com/lucee/extension-jdbc-h2/master/source/images/logo.png</image>
+        <image>https://raw.githubusercontent.com/lucee/extension-jdbc-h2/master/logo.png</image>
         <buildDate>${maven.build.timestamp}</buildDate>
-        <luceeCoreVersion>5.0.0.0</luceeCoreVersion>
-        <releaseType>server</releaseType>
+        <luceeCoreVersion>7.0.0.0</luceeCoreVersion>
         <connstr>jdbc:h2:{path}{database};MODE={mode}</connstr>
         <jdbcid>h2</jdbcid>
         <label>H2 JDBC Driver</label>
+        <releaseType>server</releaseType>
+        <!-- H2 version; the extension version is 2.1.214.N.
+             Keep 2.1.214 (what the extension currently ships via org.lucee:h2:2.1.214.0001L).
+             H2 2.2+/2.3+/2.5 change the on-disk format relative to 2.1.x. -->
+        <driverVersion>2.1.214</driverVersion>
+        <!-- Lucee 7.0 loads the driver through the OSGi bundle (it ignores "maven"). The official
+             H2 jar is an OSGi bundle (com.h2database) and is shipped in the .lex (jars/).
+             Lucee 7.1+ prefer the "maven" coordinates. -->
+        <bundleVersion>${driverVersion}</bundleVersion>
+        <driverClass>org.h2.Driver</driverClass>
+        <bundleName>com.h2database</bundleName>
+        <mvnGroupId>com.h2database</mvnGroupId>
+        <mvnArtifactId>h2</mvnArtifactId>
+        <mvnVersion>${driverVersion}</mvnVersion>
         <release.url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</release.url>
         <snapshot.url>https://oss.sonatype.org/content/repositories/snapshots/</snapshot.url>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.openjdk.nashorn</groupId>
@@ -32,11 +46,12 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.lucee</groupId>
+            <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <version>${project.version}</version>
+            <version>${mvnVersion}</version>
         </dependency>
     </dependencies>
+
     <scm>
         <url>https://github.com/lucee/extension-jdbc-h2</url>
         <connection>scm:git:git://github.com/lucee/extension-jdbc-h2.git</connection>
@@ -67,7 +82,7 @@
         </developer>
     </developers>
 
-    <description>H2 is a relational database management system written in Java.</description>
+    <description>H2 is a relational database management system written in Java. It can be embedded in Java applications or run in client-server mode.</description>
     <url>https://github.com/lucee/extension-jdbc-h2</url>
 
     <profiles>
@@ -81,7 +96,6 @@
             </activation>
             <build>
                 <plugins>
-                    <!-- GPG sign -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
@@ -96,21 +110,22 @@
                                 <configuration>
                                     <files>
                                         <file>${project.build.directory}/${project.artifactId}-${project.version}.lex</file>
+                                        <file>${project.build.directory}/${project.artifactId}-${project.version}.lite.lex</file>
                                     </files>
                                 </configuration>
                             </execution>
                         </executions>
                     </plugin>
                     <plugin>
-                      <groupId>org.apache.maven.plugins</groupId>
-                      <artifactId>maven-release-plugin</artifactId>
-                      <version>3.0.0</version>
-                      <configuration>
-                        <autoVersionSubmodules>true</autoVersionSubmodules>
-                        <useReleaseProfile>false</useReleaseProfile>
-                        <releaseProfiles>release</releaseProfiles>
-                        <goals>deploy</goals>
-                      </configuration>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-release-plugin</artifactId>
+                        <version>3.0.0</version>
+                        <configuration>
+                            <autoVersionSubmodules>true</autoVersionSubmodules>
+                            <useReleaseProfile>false</useReleaseProfile>
+                            <releaseProfiles>release</releaseProfiles>
+                            <goals>deploy</goals>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
@@ -144,31 +159,6 @@
                 </executions>
             </plugin>
 
-
-<plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.2.0</version>
-                <executions>
-                    <execution>
-                        <id>copy-h2-jar</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <includeGroupIds>org.lucee</includeGroupIds>
-                            <includeArtifactIds>h2</includeArtifactIds>
-                            <includeVersion>${project.version}</includeVersion> 
-                            <outputDirectory>${project.basedir}</outputDirectory>
-                            <overWriteReleases>false</overWriteReleases>
-                            <overWriteSnapshots>true</overWriteSnapshots>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Antrun plugin to execute the Ant build -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
@@ -193,16 +183,20 @@
                                     <property name="label" value="${label}"/>
                                     <property name="description" value="${project.description}"/>
                                     <property name="filename" value="${project.artifactId}"/>
+                                    <property name="groupId" value="${project.groupId}"/>
+                                    <property name="artifactId" value="${project.artifactId}"/>
                                     <property name="jdbcid" value="${jdbcid}"/>
                                     <property name="connstr" value="${connstr}"/>
+                                    <property name="bundleversion" value="${project.version}"/>
+                                    <property name="luceeCoreVersion" value="${luceeCoreVersion}"/>
+                                    <property name="releaseType" value="${releaseType}"/>
+                                    <property name="driverClass" value="${driverClass}"/>
+                                    <property name="bundleName" value="${bundleName}"/>
+                                    <property name="bundleVersion" value="${bundleVersion}"/>
+                                    <property name="mvnGroupId" value="${mvnGroupId}"/>
+                                    <property name="mvnArtifactId" value="${mvnArtifactId}"/>
+                                    <property name="mvnVersion" value="${mvnVersion}"/>
                                 </ant>
-                                
-                                <!-- Clean up the copied JAR after ant build -->
-                                <delete>
-                                    <fileset dir="${project.basedir}">
-                                        <include name="h2-*.jar"/>
-                                    </fileset>
-                                </delete>
 
                                 <condition property="isSnapshot" value="true" else="false">
                                     <matches string="${project.version}" pattern=".*-SNAPSHOT"/>
@@ -221,9 +215,6 @@
                 </executions>
             </plugin>
 
-           
-
-            <!-- Build Helper Plugin to attach additional artifacts -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
@@ -241,13 +232,17 @@
                                     <file>${project.build.directory}/${project.artifactId}-${project.version}.lex</file>
                                     <type>lex</type>
                                 </artifact>
+                                <artifact>
+                                    <file>${project.build.directory}/${project.artifactId}-${project.version}.lite.lex</file>
+                                    <type>lex</type>
+                                    <classifier>lite</classifier>
+                                </artifact>
                             </artifacts>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
 
-            <!-- Clean plugin to remove extra folders -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-clean-plugin</artifactId>
@@ -279,7 +274,6 @@
                 </executions>
             </plugin>
 
-            <!-- Maven Deploy Plugin to deploy the .lex file -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
@@ -301,19 +295,35 @@
                             <packaging>lex</packaging>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>deploy-lite</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>deploy-file</goal>
+                        </goals>
+                        <configuration>
+                            <file>${project.build.directory}/${project.artifactId}-${project.version}.lite.lex</file>
+                            <groupId>${project.groupId}</groupId>
+                            <artifactId>${project.artifactId}</artifactId>
+                            <version>${project.version}</version>
+                            <classifier>lite</classifier>
+                            <repositoryId>ossrh</repositoryId>
+                            <url>${deploy.url}</url>
+                            <packaging>lex</packaging>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
 
-            <!-- Nexus Staging Maven Plugin to automate the release process -->
             <plugin>
-              <groupId>org.sonatype.central</groupId>
-              <artifactId>central-publishing-maven-plugin</artifactId>
-              <version>0.8.0</version>
-              <extensions>true</extensions>
-              <configuration>
-                <publishingServerId>ossrh</publishingServerId>
-                <autoPublish>true</autoPublish>
-              </configuration>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.8.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>ossrh</publishingServerId>
+                    <autoPublish>true</autoPublish>
+                </configuration>
             </plugin>
         </plugins>
     </build>

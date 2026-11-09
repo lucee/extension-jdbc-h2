@@ -12,7 +12,7 @@ component extends="types.Driver" output="no" implements="types.IDatasource" {
 	
 	this.className="{class-name}";
 	this.bundleName="{bundle-name}";
-	this.dsn="{connString}";
+	this.dsn="{connection-string}";
 
 	/**
 	* returns display name of the driver

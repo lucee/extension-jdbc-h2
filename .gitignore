@@ -11,3 +11,5 @@ target/*
 *.lock
 *.DS_Store
 legacy/*/*.lex
+.flattened-pom.xml
+/temp
