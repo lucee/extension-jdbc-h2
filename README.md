@@ -7,6 +7,7 @@ H2 JDBC driver for Lucee. The extension ships the official `com.h2database:h2` j
 - The extension requires Lucee 7.0 or later.
 - Driver line stays at **2.1.214** (same engine as the previous `org.lucee:h2:2.1.214.0001L` extension). H2 2.2+ / 2.3+ / 2.5 change the on-disk format relative to 2.1.x, so they are not used here.
 - Bundle symbolic name changes from `org.lucee.h2` to the upstream `com.h2database`.
+- The shipped OSGi jar drops `Bundle-Activator` and the hard `org.osgi.framework` import so Lucee 7.0 can resolve it (upstream requires framework 1.5). Maven copies under `maven/` stay the untouched Central artifact.
 
 The version of the extension is the H2 version plus a build number (for example `2.1.214.1`).
 

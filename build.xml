@@ -58,6 +58,50 @@
         ]]>
     </scriptdef>
 
+
+    <!-- Official H2 Import-Package requires org.osgi.framework;version=1.5, which Lucee 7.0's
+         Felix does not export. Lucee's own org.lucee.h2 wrap used DynamicImport instead.
+         For JDBC we do not need Bundle-Activator; drop both so the jar resolves on 7.0. -->
+    <scriptdef name="relaxH2Osgi" language="javascript">
+        <attribute name="file" />
+        <![CDATA[
+            var Files = java.nio.file.Files;
+            var Paths = java.nio.file.Paths;
+            var path = Paths.get(attributes.get("file"));
+            var text = new java.lang.String(Files.readAllBytes(path), "UTF-8");
+            text = java.util.regex.Pattern.compile("\\r?\\n ").matcher(text).replaceAll("");
+            var lines = java.util.regex.Pattern.compile("\\r?\\n").split(text);
+            var out = new java.lang.StringBuilder();
+            var removedImport = false;
+            var removedActivator = false;
+            for (var i = 0; i < lines.length; i++) {
+                var line = String(lines[i]);
+                if (line.indexOf("Bundle-Activator:") === 0) {
+                    removedActivator = true;
+                    continue;
+                }
+                if (line.indexOf("Import-Package:") === 0) {
+                    var parts = line.substring("Import-Package:".length).trim().split(",");
+                    var kept = [];
+                    for (var j = 0; j < parts.length; j++) {
+                        var p = parts[j].trim();
+                        if (p.indexOf("org.osgi.framework") === 0) {
+                            removedImport = true;
+                            continue;
+                        }
+                        kept.push(p);
+                    }
+                    line = "Import-Package: " + kept.join(",");
+                }
+                if (line.length > 0) out.append(line).append("\r\n");
+            }
+            if (!removedImport) throw new java.lang.RuntimeException("org.osgi.framework import not found in " + path);
+            if (!removedActivator) throw new java.lang.RuntimeException("Bundle-Activator not found in " + path);
+            out.append("\r\n");
+            Files.write(path, out.toString().getBytes("UTF-8"));
+        ]]>
+    </scriptdef>
+
     <target name="init">
         <delete dir="${temp}"/>
         <delete dir="${dist}/"/>
@@ -76,14 +120,20 @@
             <arg value="dependency:copy-dependencies"/>
         </exec>
 
-        <!-- OSGi bundle used by Lucee 7.0 (installed from the .lex jars/ folder); the official H2 jar is a bundle (com.h2database).
-             Unlike HSQLDB, H2 does not self-import its own packages, so the jar is shipped unchanged. -->
+        <!-- OSGi bundle used by Lucee 7.0 (installed from the .lex jars/ folder); the official H2 jar is a bundle (com.h2database). -->
         <exec dir="${basedir}" executable="mvn" failonerror="true">
             <arg value="-Dartifact=${mvnGroupId}:${mvnArtifactId}:${bundleVersion}"/>
             <arg value="-DoutputDirectory=${dist}/extension/jars"/>
             <arg value="-Dmdep.stripVersion=false"/>
             <arg value="dependency:copy"/>
         </exec>
+
+        <!-- Relax OSGi imports so Lucee 7.0 can resolve the bundle (see relaxH2Osgi). -->
+        <property name="bundleFile" value="${mvnArtifactId}-${bundleVersion}.jar"/>
+        <delete dir="${temp}/bundle"/>
+        <unzip src="${dist}/extension/jars/${bundleFile}" dest="${temp}/bundle"/>
+        <relaxH2Osgi file="${temp}/bundle/META-INF/MANIFEST.MF"/>
+        <jar destfile="${dist}/extension/jars/${bundleFile}" basedir="${temp}/bundle" manifest="${temp}/bundle/META-INF/MANIFEST.MF" filesetmanifest="skip" duplicate="preserve"/>
     </target>
 
     <target name="copy-dependencies" depends="maven-build">
